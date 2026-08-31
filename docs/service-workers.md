@@ -29,9 +29,9 @@ _The agent recognizes that `http://todoapp.example` has registered tools via its
 ```javascript
 /**
  * Adds a single item to the user's todo list.
- * 
+ *
  * item - A string representing the task to add to the list
- * priority - Optional priority level: "low", "medium", "high". Defaults to "medium"  
+ * priority - Optional priority level: "low", "medium", "high". Defaults to "medium"
  * due_date - Optional due date in ISO format (YYYY-MM-DD)
  */
 addTodoItem(item, priority, due_date)
@@ -60,7 +60,7 @@ _The agent recognizes that `http://freshmart.example` has registered tools via i
 ```javascript
 /**
  * Searches for available products matching the given item name.
- * 
+ *
  * item_name - A string describing the product to search for
  * returns - Array of products with id, name, price, and availability
  */
@@ -68,7 +68,7 @@ searchProducts(item_name)
 
 /**
  * Adds a specific product to the user's shopping cart.
- * 
+ *
  * product_id - The ID of the product to add to cart
  * quantity - Number of items to add (defaults to 1)
  */
@@ -77,7 +77,7 @@ addToCart(product_id, quantity)
 /**
  * Initiates the order placement process. Opens a secure payment window
  * if payment information is needed from the user.
- * 
+ *
  * returns - Completes the order or opens a payment interface as needed
  */
 placeOrder()
@@ -108,7 +108,7 @@ This demonstrates how service workers can handle complex workflows that combine 
 
 ### Discovery and Installation
 
-For a service worker to provide WebMCP tools, the service worker must first be installed. Installation typically happens when a user first navigates to a web site that uses the `navigator.serviceWorker.register()` method. Although service workers are often associated with PWAs, a site doesn't necessarily need to be a PWA to register a service worker. Also, once registered, the same service worker may serve both tabbed pages, and standalone app windows at the same time. 
+For a service worker to provide WebMCP tools, the service worker must first be installed. Installation typically happens when a user first navigates to a web site that uses the `navigator.serviceWorker.register()` method. Although service workers are often associated with PWAs, a site doesn't necessarily need to be a PWA to register a service worker. Also, once registered, the same service worker may serve both tabbed pages, and standalone app windows at the same time.
 
 Service workers installed in this way can provide tools, but this approach is limited because the user must explicitly seek out a site with the tools they need and navigate to the site at least once. To facilitate a better user experience, it would be helpful to provide agents with a means to discover and recommend relevant sites for the user and give the user the option to install these sites on demand.
 
@@ -135,7 +135,7 @@ The output of this hypothetical discovery step is the URL of a web app manifest 
 
 Service workers have a new `agent` object available in their global scope; the same `agent` object as specified in the original WebMCP explainer. When the service worker is activated, the worker script can call the `agent` object's methods to register tools with the browser. These tools are then available for use by in-browser AI agents.
 
-Tools are scoped to the service worker and origin that created them, so it's not possible for a single app to squat common tool names like "search" or "add-to-cart". On the agent side, each conversation should have a limited set of WebMCP service workers connected which are relevant to the topic of the conversation. This prevents giving the agent more privileges than necessary and conserves the LLMs limited context window. Service worker selection may happen either automatically based on the agent's suggestions or manually based on user configuration. If two or more WebMCP service workers with similar tools and purposes are enabled in the same conversation, then agents may resolve the ambiguity by asking the user to pick one and remember their preference; much like how users choose a default browser for their OS. 
+Tools are scoped to the service worker and origin that created them, so it's not possible for a single app to squat common tool names like "search" or "add-to-cart". On the agent side, each conversation should have a limited set of WebMCP service workers connected which are relevant to the topic of the conversation. This prevents giving the agent more privileges than necessary and conserves the LLMs limited context window. Service worker selection may happen either automatically based on the agent's suggestions or manually based on user configuration. If two or more WebMCP service workers with similar tools and purposes are enabled in the same conversation, then agents may resolve the ambiguity by asking the user to pick one and remember their preference; much like how users choose a default browser for their OS.
 
 The complete flow, including JIT installation of service workers, is illustrated below. The Discovery Layer is a placeholder for now. It represents some entity that can recommend apps. Some possibilities for the discovery layer are described in Appendix A.
 
@@ -161,11 +161,11 @@ B->>U: (1st time) Permission?
 U->>B: Allow
 B->>E: HTTP GET manifest.json
 activate E
-E-->>B: 
+E-->>B:
 deactivate E
 B->>E: HTTP GET service-worker.js
 activate E
-E-->>B: 
+E-->>B:
 deactivate E
 B->>F: 'install' event
 activate F
@@ -194,7 +194,7 @@ A-->>U: Render response to user
 
 In the initial WebMCP API proposal, tools are associated with a web page in a specific tab/window, and there is an implicit 1:1 mapping between the page, and an AI assistant operating that page. In other words, tool calls are handled only by one page and are sent from only one agent.
 
-Service workers aren't associated with any particular window; they are associated with an origin (and optionally, a scope path). Tool requests that are addressed to a service worker may come from multiple different client agents and may be interleaved in arbitrary ways. 
+Service workers aren't associated with any particular window; they are associated with an origin (and optionally, a scope path). Tool requests that are addressed to a service worker may come from multiple different client agents and may be interleaved in arbitrary ways.
 
 Adding to this complexity, a web developer may register tools both in the service worker context, and page contexts. An implementation will need to handle ambiguity when both service workers and pages provide similar tools.
 
@@ -206,7 +206,7 @@ This is the simplest architecture; a 1:1 mapping. A page with tools is opened in
 
 #### Service worker only
 
-In this architecture there's only one WebMCP "server" to consider; the service worker. Unlike the single tab case though, any number of in-browser and possibly even external agents (OS-integrated, or third-party apps) may want to connect to this service worker. All tool calls are routed to the service worker. 
+In this architecture there's only one WebMCP "server" to consider; the service worker. Unlike the single tab case though, any number of in-browser and possibly even external agents (OS-integrated, or third-party apps) may want to connect to this service worker. All tool calls are routed to the service worker.
 
 #### Tabs plus service worker
 
