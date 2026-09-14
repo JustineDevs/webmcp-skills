@@ -1,0 +1,30 @@
+{
+  "tools": [
+    {
+      "name": "lookup_order",
+      "title": "Look up an order",
+      "description": "Find an order by number and return its current status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {"orderNumber": {"type": "string", "minLength": 1}},
+        "required": ["orderNumber"],
+        "additionalProperties": false
+      },
+      "annotations": {"readOnlyHint": true, "untrustedContentHint": true},
+      "origin": "https://example.test"
+    },
+    {
+      "name": "place_order",
+      "title": "Place an order",
+      "description": "Place the reviewed order after the user confirms the final total.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {"orderNumber": {"type": "string", "minLength": 1}},
+        "required": ["orderNumber"],
+        "additionalProperties": false
+      },
+      "annotations": {"readOnlyHint": false, "untrustedContentHint": false},
+      "origin": "https://example.test"
+    }
+  ]
+}

@@ -90,6 +90,16 @@ Use the repository's current Web IDL as the API authority; the JSON boundary and
 - Preserve the original source and provide a diff for generated changes.
 - Report the failed pipeline stage, source span, unchanged state, and next safe action; never retry a mutation blindly.
 
+## Executable artifact check
+
+Validate a `DESIGN.md` artifact and its recoverable semantic signals with:
+
+```sh
+./scripts/webmcp-toolkit.sh design DESIGN.md
+```
+
+This check covers front matter, canonical section order, token-reference roots, component-state language, and accessibility signals. It is a deterministic preflight, not a replacement for rendering, contrast measurement, or live UI review.
+
 ## Output checklist
 
 - [ ] Source, origin, version, and evidence are recorded.

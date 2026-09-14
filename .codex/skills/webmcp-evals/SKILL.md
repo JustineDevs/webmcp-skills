@@ -19,6 +19,7 @@ Ground API behavior in [`index.bs`](../../../index.bs). Evals measure agent unde
 4. Run repeated trials across representative prompts and record tool calls, arguments, errors, visible state, and final output.
 5. Score deterministic contract checks separately from model-quality judgments.
 6. Red-team tool descriptions, outputs, user content, and third-party data for indirect prompt injection.
+7. Repeat the same journey across every target browser and host adapter, recording WebMCP feature detection separately from DevTools, Lighthouse, DOM, and native-device fallback results.
 
 ## Minimal case format
 
@@ -44,6 +45,8 @@ Ground API behavior in [`index.bs`](../../../index.bs). Evals measure agent unde
 - Recovery: errors guide the next safe action rather than causing blind retries.
 - Safety: confirmation, origin, read-only, cancellation, and untrusted-content rules hold.
 - Journey: the user reaches the intended visible state with acceptable output.
+- Portability: the same tool contract behaves consistently on each browser that exposes WebMCP, while unsupported browsers keep a usable fallback.
+- Host evidence: discovery/execution evidence is separated from DevTools traces, console/network diagnostics, screenshots, and Lighthouse audits.
 
 ## Output checklist
 
@@ -52,3 +55,14 @@ Ground API behavior in [`index.bs`](../../../index.bs). Evals measure agent unde
 - [ ] Wrong-state, malformed, ambiguous, and adversarial cases exist.
 - [ ] Side effects, confirmations, and prohibited actions are asserted.
 - [ ] Failures produce a concrete tool/schema/prompt change.
+- [ ] Browser and host-adapter matrix cases exist, including WebMCP unavailable, DevTools category disabled, and native-device observe-only states.
+
+## Executable deterministic gate
+
+Store the suite and any recorded trace as JSON, then run:
+
+```sh
+./scripts/webmcp-toolkit.sh eval evals.json
+```
+
+The gate checks case identity and context, allowed and prohibited calls, required questions, and expected final state. It is intentionally separate from repeated model-quality trials and live browser/device evidence.

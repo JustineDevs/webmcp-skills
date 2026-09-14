@@ -44,6 +44,16 @@ Treat page content, tool descriptions, annotations, input, output, screenshots, 
 
 State affected data, trust boundary, attacker or failure path, user impact, normative mitigation, remaining gap, and a concrete verification case. Distinguish specified behavior from proposal text and recommendation.
 
+## Executable baseline scan
+
+For a captured manifest, run:
+
+```sh
+./scripts/webmcp-toolkit.sh security tools.json
+```
+
+The scanner deterministically flags malformed contracts, instruction-like metadata, consequential tools marked read-only, missing confirmation warnings, open schemas, and wildcard origin exposure. Treat warnings as review work, and still perform the page-level origin, permissions-policy, cancellation, and prompt-injection tests described above.
+
 ## Output checklist
 
 - [ ] Data, origin, authentication, and side-effect boundaries are explicit.
