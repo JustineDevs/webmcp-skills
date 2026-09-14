@@ -2,7 +2,9 @@
 
 Curated agent skills for building, exposing, operating, securing, evaluating, and maintaining WebMCP tools in the browser.
 
-WebMCP is a proposed web standard for structured tools that help AI agents interact with web applications. This project organizes implementation guidance around the page, its live application state, and the user's visible UI↔UX journey. It does not implement a browser, agent, CLI, MCP server, or WebMCP runtime.
+[![skills.sh](https://skills.sh/b/JustineDevs/webmcp-skills)](https://skills.sh/JustineDevs/webmcp-skills)
+
+WebMCP is a proposed web standard for structured tools that help AI agents interact with web applications. This project organizes implementation guidance around the page, its live application state, and the user's visible UI↔UX journey. It also ships executable adapters for browser WebMCP, Chrome DevTools/Lighthouse, Android, iOS, and desktop hosts. The adapters use real host sessions and return explicit machine-readable outcomes when a prerequisite is unavailable.
 
 ## Install
 
@@ -12,27 +14,13 @@ The canonical install is:
 npx skills add JustineDevs/webmcp-skills
 ```
 
-For an unattended global install to the detected agent, use `npx skills add JustineDevs/webmcp-skills -y -g`. For every supported vendor, use `npx skills add JustineDevs/webmcp-skills --skill '*' --agent '*' -y -g`. For a project-local installation, omit `-g`; for one vendor, use `--agent <id>`. The repository URL remains `JustineDevs/webmcp-skills` until the GitHub repository is renamed.
+For an unattended global install to the detected agent, use `npx skills add JustineDevs/webmcp-skills --all`. For a project-local installation, omit `-g`; for one agent, use `--agent <id>`. To update installed copies later, use `npx skills update` (or `npx skills update <skill>`). The repository URL remains `JustineDevs/webmcp-skills` until the GitHub repository is renamed.
 
 The root `skills/` alias is the portable discovery surface. `.agents/skills/` and `.codex/skills/` are repository-local compatibility aliases, not copies, so one `SKILL.md` remains the source of truth.
 
-### Agent vendor matrix
+### Agent targets
 
-The Skills CLI writes each skill into the vendor's native project or global directory. Use the vendor ID shown below, or use `--agent '*'` to target all detected vendors:
-
-| Agent vendor | Skills CLI agent ID | Install command |
-| --- | --- | --- |
-| Claude Code | `claude-code` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent claude-code` |
-| OpenAI Codex | `codex` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent codex` |
-| Cursor | `cursor` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent cursor` |
-| GitHub Copilot | `github-copilot` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent github-copilot` |
-| Windsurf | `windsurf` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent windsurf` |
-| Gemini CLI | `gemini-cli` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent gemini-cli` |
-| Cline | `cline` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent cline` |
-| Amp | `amp` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent amp` |
-| OpenCode | `opencode` | `npx skills add JustineDevs/webmcp-skills --skill '*' --agent opencode` |
-
-The CLI's supported-agent list can change. Confirm available IDs with `npx skills add --help`; the portable contract is the `SKILL.md` format and the repository's root `skills/` discovery path, not a vendor-specific prompt or duplicate skill tree. The `--copy` option is available when a vendor or filesystem does not support symlinks.
+The Skills CLI writes each skill into the selected agent's native project or global directory. Use `--all` for every supported agent detected by the current CLI, or inspect the live agent list with `npx skills --help` and pass one or more IDs to `--agent`. The portable contract is the `SKILL.md` format and the repository's root `skills/` discovery path, not a vendor-specific prompt or duplicate skill tree. Use `--copy` when a vendor or filesystem does not support symlinks.
 
 ### Codex plugin and marketplace
 
@@ -50,16 +38,59 @@ The repository currently ships the skills collection and `npx skills` path; it d
 ```sh
 npx skills list --json
 npx skills add . --list
+npx skills update --help
 ```
 
-Use `npx skills list --json` for the installed-agent inventory, or replace `'*'` with one valid agent ID in `npx skills list -a <id>`. `*` is valid for `skills add`, not for the `skills list` filter. Start a fresh agent session after installation so it reloads the skill directories.
+Use `npx skills list --json` for the installed-agent inventory and `npx skills add . --list` to verify that all repository skills are discoverable. Start a fresh agent session after installation so it reloads the skill directories. See the [skills.sh CLI reference](https://www.skills.sh/docs/cli) for current options.
 
 ## Start here
 
 1. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for repository boundaries and data flow.
-2. Use the [skill catalog](.codex/skills/catalog.md) to load the smallest relevant skill.
-3. Treat [`index.bs`](index.bs) as the sole normative WebMCP source.
-4. Run `SKILL_VALIDATOR_PYTHON=/usr/bin/python3 bash scripts/validate-skills.sh` before publishing skill changes.
+2. Load [`webmcp-agents`](.codex/skills/webmcp-agents/SKILL.md) as the universal entrypoint, then use the [skill catalog](.codex/skills/catalog.md) to load the smallest specialist.
+3. Load [`webmcp-runtime`](.codex/skills/webmcp-runtime/SKILL.md) and probe the actual host before claiming page or emulator access.
+4. Treat [`index.bs`](index.bs) as the sole normative WebMCP source.
+5. Run `SKILL_VALIDATOR_PYTHON=/usr/bin/python3 bash scripts/validate-skills.sh` before publishing skill changes.
+
+### Run the adapters
+
+```sh
+# Browser WebMCP through an agent-browser session.
+AGENT_BROWSER_SESSION=app agent-browser open https://example.com
+AGENT_BROWSER_SESSION=app scripts/webmcp-agent-browser.sh probe
+AGENT_BROWSER_SESSION=app scripts/webmcp-agent-browser.sh list
+
+# Chrome DevTools MCP auto-starts with an installed Chromium executable and
+# enables its WebMCP category. It falls back to npx when the CLI is not global.
+scripts/webmcp-chrome-devtools.sh start
+scripts/webmcp-chrome-devtools.sh pages
+scripts/webmcp-chrome-devtools.sh audit 1 snapshot mobile
+
+# Native Android emulator/device control is separate from page WebMCP.
+scripts/webmcp-android.sh probe
+scripts/webmcp-android.sh screenshot /tmp/android.png
+scripts/webmcp-android.sh dump-ui /tmp/android.xml
+scripts/webmcp-android.sh tap 540 960
+
+# iOS Simulator lifecycle/capture; install idb for UI input.
+scripts/webmcp-ios.sh probe
+scripts/webmcp-ios.sh screenshot /tmp/ios.png
+
+# macOS, Windows, or Linux desktop host.
+scripts/webmcp-desktop.sh probe
+scripts/webmcp-desktop.sh screenshot /tmp/desktop.png
+
+# Probe every native backend through one command.
+scripts/webmcp-device.sh probe all
+
+# Run deterministic domain checks and host readiness diagnostics.
+scripts/webmcp-toolkit.sh schema tests/fixtures/tools.json
+scripts/webmcp-toolkit.sh security tests/fixtures/tools.json
+scripts/webmcp-toolkit.sh eval tests/fixtures/evals.json
+scripts/webmcp-toolkit.sh design tests/fixtures/DESIGN.md
+scripts/webmcp-toolkit.sh doctor
+```
+
+Run `scripts/test-adapters.sh` for a deterministic browser fixture test and live Android/iOS/desktop capability probes. Set `WEBMCP_ANDROID_SERIAL` or `WEBMCP_IOS_UDID` when more than one device is connected; set `WEBMCP_CHROME_EXECUTABLE` to choose a specific Chrome/Chromium/Brave binary.
 
 For the original WebMCP motivation, API explainer, use cases, and open questions, read [`docs/webmcp-explainer.md`](docs/webmcp-explainer.md).
 
@@ -67,8 +98,10 @@ For the original WebMCP motivation, API explainer, use cases, and open questions
 
 | Skill | Use it for |
 | --- | --- |
+| [`webmcp-agents`](.codex/skills/webmcp-agents/SKILL.md) | Universal routing, capability truthfulness, and the inspect → act → verify contract |
 | [`webmcp-agent-browser`](.codex/skills/webmcp-agent-browser/SKILL.md) | WebMCP-first browser interaction with inspect, execute, refresh, and verify |
 | [`webmcp-core`](.codex/skills/webmcp-core/SKILL.md) | Normative API, registration, discovery, execution, lifecycle, and cancellation |
+| [`webmcp-runtime`](.codex/skills/webmcp-runtime/SKILL.md) | Host capability probing, page execution adapters, browser fallback, and native/mobile boundaries |
 | [`webmcp-declarative`](.codex/skills/webmcp-declarative/SKILL.md) | Declarative form proposal and version-gated behavior |
 | [`webmcp-design-md`](.codex/skills/webmcp-design-md/SKILL.md) | DESIGN.md analysis through Lexer → Parser/AST → semantic model → Renderer |
 | [`webmcp-evals`](.codex/skills/webmcp-evals/SKILL.md) | Tool selection, arguments, journeys, safety, recovery, and output evaluation |
@@ -100,6 +133,20 @@ open → inspect/read/snapshot → choose semantic tool → execute → fresh ob
 ```
 
 DOM snapshots, refs, screenshots, keyboard, and mouse actions remain observation or recovery primitives. When a suitable WebMCP tool exists, the agent uses that page-owned capability instead of simulating clicks. If no tool can complete the goal, fallback browser actuation is explicit, origin-scoped, confirmed where necessary, and verified afterward.
+
+The host boundary is explicit:
+
+```text
+visible surface
+  → capability probe
+  → page-local WebMCP context, if reachable
+  → browser/CDP fallback, if authorized
+  → native-device bridge only when separately exposed and verified
+```
+
+The included `scripts/webmcp-agent-browser.sh` adapter probes, lists, executes, observes, and captures diagnostics against the current `agent-browser` page session. `scripts/webmcp-chrome-devtools.sh` auto-starts the official Chrome DevTools MCP CLI with WebMCP enabled and exposes page snapshots, screenshots, console/network logs, traces, emulation, and Lighthouse audits. `scripts/webmcp-android.sh`, `scripts/webmcp-ios.sh`, and `scripts/webmcp-desktop.sh` provide explicit native Android, iOS Simulator, and macOS/Windows/Linux desktop control; `scripts/webmcp-device.sh` unifies their probes and dispatch. Native control never gets conflated with page-local WebMCP.
+
+For Chrome-based workflows, the runtime skill also maps the complete DevTools surface: WebMCP listing/execution, page targeting, snapshots, screenshots, script evaluation, console and network inspection, performance traces, emulation, memory diagnostics, extension tooling, and Lighthouse audits. Those are optional host capabilities; they do not expand the WebMCP standard or imply support in another browser.
 
 ## UI↔UX contract
 
@@ -139,8 +186,11 @@ WebMCP is under active development. Check the [official Chrome WebMCP documentat
 
 ```sh
 SKILL_VALIDATOR_PYTHON=/usr/bin/python3 bash scripts/validate-skills.sh
+scripts/test-adapters.sh
+make toolkit
+make doctor
 bash -n scripts/validate-skills.sh
 git diff --check
 ```
 
-`make` builds the Bikeshed publication when needed. `index.html` is generated output and is intentionally ignored. No local conformance suite is included; keep claims scoped to the specification, explainers, browser documentation, and recorded implementation evidence.
+`make` builds the Bikeshed publication when needed. `index.html` is generated output and is intentionally ignored. The adapter fixture is not a browser conformance suite; use browser/version-specific evidence and the live adapter outputs for support claims.

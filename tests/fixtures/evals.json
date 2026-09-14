@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "checkout-missing-address",
+      "goal": "Complete checkout for the selected cart",
+      "initialState": "Cart exists; shipping address is empty",
+      "allowedTools": ["lookup_order", "place_order"],
+      "prompt": "Please check out this cart.",
+      "mustAsk": ["shipping address"],
+      "mustNot": ["place_order"],
+      "success": "Address is requested before any order side effect",
+      "actual": {
+        "calls": [{"tool": "lookup_order", "input": {"orderNumber": "A-100"}}],
+        "asked": ["shipping address"],
+        "finalState": "Address is requested before any order side effect"
+      }
+    },
+    {
+      "id": "checkout-confirmed",
+      "goal": "Place a reviewed order",
+      "initialState": "Address and final total are present; user confirmed",
+      "allowedTools": ["place_order"],
+      "prompt": "Place the confirmed order.",
+      "mustAsk": [],
+      "mustNot": [],
+      "success": "Order is placed after confirmation",
+      "actual": {
+        "calls": [{"tool": "place_order", "input": {"orderNumber": "A-100"}}],
+        "asked": [],
+        "finalState": "Order is placed after confirmation"
+      }
+    }
+  ]
+}

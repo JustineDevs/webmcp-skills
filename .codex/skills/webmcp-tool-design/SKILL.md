@@ -65,6 +65,18 @@ await document.modelContext.registerTool({
 
 Errors should tell the agent what is wrong and what information or prerequisite resolves it. For example: `No search results exist. Run search_flights first.` Avoid raw stack traces, silent failures, and automatic retries that could repeat a side effect.
 
+## Executable contract checks
+
+Keep the design artifact testable outside a model run. Validate captured tool metadata, run the security checks, and execute deterministic journey cases with:
+
+```sh
+./scripts/webmcp-toolkit.sh schema tools.json
+./scripts/webmcp-toolkit.sh security tools.json
+./scripts/webmcp-toolkit.sh eval evals.json
+```
+
+Use these checks as a gate before live browser execution; keep confirmation and visible-state assertions in the journey cases.
+
 ## Output checklist
 
 - [ ] User goal, scope, and success state are explicit.

@@ -38,6 +38,20 @@ The core API supports `registerTool(tool, options)`, `getTools(options)`, `execu
 
 The conceptual lifecycle is registration → discovery → invocation → execution → result. Browser agents use browser-mediated discovery; in-page agents use `getTools()`. Tool results are stringified by the API contract, so return stable, concise, machine-readable values.
 
+## Host adapter boundary
+
+The API defines the page-local capability, not the transport that an external agent uses to reach the page. Before testing or claiming execution, identify a real host adapter such as in-page JavaScript, an extension, Playwright/CDP, or `agent-browser` evaluation. Use [`webmcp-runtime`](../webmcp-runtime/SKILL.md) for the probe and fallback contract. A visible browser or mobile-emulator surface is not proof that `document.modelContext` is reachable.
+
+## Executable contract check
+
+Run the repository toolkit against captured tool metadata before treating a manifest as valid:
+
+```sh
+./scripts/webmcp-toolkit.sh schema tests/fixtures/tools.json
+```
+
+This deterministic check covers names, descriptions, object input schemas, required properties, annotations, origins, and duplicate registrations. It complements live browser discovery; it does not replace testing the page's actual `registerTool()` and `executeTool()` behavior.
+
 ## Do not assume
 
 Browser observation formats are implementation-defined. Declarative forms and service workers remain proposal material. Tool descriptions and annotations are not authorization.

@@ -13,8 +13,8 @@ The main deliverable is the Bikeshed-generated WebMCP specification. Supporting 
 - Build/lint/watch: [`Makefile`](Makefile)
 - Metadata: [`w3c.json`](w3c.json)
 - Documentation: Markdown
-- Runtime dependencies: none declared in this repository
-- Tests: no repository-local test suite; the spec metadata points to the Web Platform Tests results for WebMCP
+- Runtime dependencies: host-installed `agent-browser`, Node/npm for Chrome DevTools MCP, Android SDK `adb`, and platform-native iOS/desktop tools when those targets are requested
+- Tests: `scripts/test-adapters.sh` provides a deterministic browser adapter smoke test and live Android/iOS/desktop probes; it is not a WebMCP browser-conformance suite
 
 ## High-Level Architecture
 
@@ -52,8 +52,18 @@ The source document describes the API and processing model. Bikeshed resolves We
 ├── LICENSE.md                       # W3C software and document license
 ├── .codex/skills/                    # Curated skills; see catalog.md
 │   └── catalog.md                    # Canonical ownership inventory
-├── scripts/                          # Maintainer validation helpers
-│   └── validate-skills.sh            # Skill/catalog/boundary checks
+├── scripts/                          # Maintainer validation and host-adapter helpers
+│   ├── validate-skills.sh            # Skill/catalog/boundary checks
+│   ├── test-adapters.sh              # Browser fixture + live native adapter smoke test
+│   ├── webmcp-agent-browser.sh       # Page-local WebMCP + observation adapter
+│   ├── webmcp-chrome-devtools.sh     # WebMCP, DevTools, trace, emulation, and Lighthouse
+│   ├── webmcp-android.sh             # Native Android emulator/device adapter over ADB
+│   ├── webmcp-ios.sh                 # iOS Simulator adapter over simctl/idb
+│   ├── webmcp-desktop.sh             # macOS/Windows/Linux desktop adapter
+│   └── webmcp-device.sh              # Universal native adapter dispatcher
+│   ├── webmcp-toolkit.mjs             # Schema/security/eval/design/setup/doctor runtime
+│   └── webmcp-toolkit.sh              # Portable toolkit launcher
+├── tests/fixtures/                    # Browser, manifest, eval, and DESIGN.md fixtures
 └── assets/                          # Repository branding assets
 ```
 
@@ -61,9 +71,9 @@ The source document describes the API and processing model. Bikeshed resolves We
 
 The repo-local skill suite is indexed by [`.codex/skills/catalog.md`](.codex/skills/catalog.md), which is the single source of truth for skill ownership and repository coverage.
 
-Direct skill entry points: [core](.codex/skills/webmcp-core/SKILL.md), [agent-browser](.codex/skills/webmcp-agent-browser/SKILL.md), [tool-design](.codex/skills/webmcp-tool-design/SKILL.md), [design-md](.codex/skills/webmcp-design-md/SKILL.md), [declarative](.codex/skills/webmcp-declarative/SKILL.md), [service-workers](.codex/skills/webmcp-service-workers/SKILL.md), [security](.codex/skills/webmcp-security/SKILL.md), [evals](.codex/skills/webmcp-evals/SKILL.md), [frameworks](.codex/skills/webmcp-frameworks/SKILL.md), [setup](.codex/skills/webmcp-setup/SKILL.md), and [maintainer](.codex/skills/webmcp-maintainer/SKILL.md).
+Direct skill entry points: [webmcp-agents](.codex/skills/webmcp-agents/SKILL.md), [runtime](.codex/skills/webmcp-runtime/SKILL.md), [core](.codex/skills/webmcp-core/SKILL.md), [agent-browser](.codex/skills/webmcp-agent-browser/SKILL.md), [tool-design](.codex/skills/webmcp-tool-design/SKILL.md), [design-md](.codex/skills/webmcp-design-md/SKILL.md), [declarative](.codex/skills/webmcp-declarative/SKILL.md), [service-workers](.codex/skills/webmcp-service-workers/SKILL.md), [security](.codex/skills/webmcp-security/SKILL.md), [evals](.codex/skills/webmcp-evals/SKILL.md), [frameworks](.codex/skills/webmcp-frameworks/SKILL.md), [setup](.codex/skills/webmcp-setup/SKILL.md), and [maintainer](.codex/skills/webmcp-maintainer/SKILL.md).
 
-Load the smallest skill matching the task, then follow its source links. [`scripts/validate-skills.sh`](scripts/validate-skills.sh) is the executable stale/orphan and boundary check.
+Load `webmcp-agents` first for runtime and safety routing, then load the smallest specialist matching the task. [`scripts/webmcp-agent-browser.sh`](scripts/webmcp-agent-browser.sh) is the page-local adapter when `agent-browser` is connected. [`scripts/webmcp-chrome-devtools.sh`](scripts/webmcp-chrome-devtools.sh) is the Chrome/Chromium DevTools and Lighthouse adapter. [`scripts/webmcp-android.sh`](scripts/webmcp-android.sh) is the explicit native Android bridge. [`scripts/validate-skills.sh`](scripts/validate-skills.sh) is the executable stale/orphan and boundary check.
 
 ## Key Components
 
@@ -96,6 +106,7 @@ Tools carry a name, optional title, description, JSON-schema-like input metadata
 
 - [`README.md`](README.md) is the `webmcp-agents` project entry point and skill guide.
 - [`docs/webmcp-explainer.md`](docs/webmcp-explainer.md) explains WebMCP motivation, goals/non-goals, use cases, lifecycle, alternatives, prior art, and open questions in developer-facing language.
+- [`.codex/skills/webmcp-runtime/SKILL.md`](.codex/skills/webmcp-runtime/SKILL.md) defines the host capability matrix and the boundary between page-local WebMCP and browser/native adapters.
 - [`declarative-api-explainer.md`](declarative-api-explainer.md) proposes exposing forms through `toolname`, `tooldescription`, `toolautosubmit`, and `toolparamdescription`, plus response and activation behavior. It contains explicit TBD areas.
 - [`docs/service-workers.md`](docs/service-workers.md) explores installing and routing tools through service workers, including multi-tab routing, session IDs, and security tradeoffs. It is an explainer, not part of the current normative API surface.
 - [`implementation-status.md`](implementation-status.md) records reported support/status for Brave, ChatGPT Desktop, Chrome, Edge, Firefox, and Safari.
@@ -142,6 +153,8 @@ sequenceDiagram
     Context-->>Agent: Stringified tool result or failure
     Agent-->>Page: Present/use result and page state
 ```
+
+The repository does not assume that an agent can reach the page merely because a browser, desktop panel, or emulator is visible. The runtime adapter probes the connected target, then uses page-local WebMCP first and browser or native fallbacks only when a separately authorized adapter exists.
 
 The browser mediates discovery and execution. Tools remain associated with their document lifetime; cross-document exposure is constrained by secure-context and `tools` Permissions Policy rules, with `exposedTo` controlling explicitly exposed origins.
 
@@ -254,6 +267,9 @@ The repository has no package manifest or declared runtime dependencies. Its mea
 - JSON Schema references for tool input schemas.
 - Permissions Policy and Secure Contexts references for access control.
 - MCP, used as an architectural comparison for in-page tools.
+- `agent-browser`, an optional CDP browser host used by `scripts/webmcp-agent-browser.sh`.
+- Chrome DevTools MCP, an optional Chrome/Chrome for Testing host with WebMCP, debugging, performance, and Lighthouse tools.
+- Lighthouse, an optional audit/verifier for browser performance, accessibility, best practices, and SEO; it is not a WebMCP transport.
 - Web Platform Tests results, linked from the spec metadata as the intended test-results surface.
 
 ## Development Workflow
@@ -296,7 +312,8 @@ Treat `index.bs` as authoritative. Label the Markdown material as exploratory/TB
 
 ## Scope and Known Boundaries
 
-- This repository specifies browser behavior; it does not implement a browser, agent, MCP server, or service worker.
+- This repository specifies browser behavior and ships operational skill guidance plus executable browser, DevTools/Lighthouse, Android, iOS Simulator, and desktop host adapters. It does not implement a browser, agent, or MCP server; native adapters still require the corresponding real host tools and permissions.
+- A screenshot or visible emulator panel is observe-only evidence until discovery, execution, and post-action verification are independently available through a host adapter.
 - The service-worker and declarative-form designs are exploratory and include unresolved routing/schema/response questions.
 - Browser support is tracked separately and may change independently of the draft text.
 - No local automated conformance suite is present; verification relies on Bikeshed diagnostics and external Web Platform Tests/implementation tracking.
